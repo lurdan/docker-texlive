@@ -1,0 +1,47 @@
+#+TITLE: texlive の docker コンテナ
+
+* 目的
+
+- 使っている OS に関係なく「TeX による PDF 出力」をぶん投げたい
+- TeX ぜんぜんわからんので深入りを避けたい
+
+* 方針メモ
+
+- 構成
+  - 可能な限り小さいイメージサイズ
+    - [ ] 現状 1GB 強→ 1GB 未満に……
+      - 1GB 越えるなら unstable-slim ベースでもかわんないかも？
+  - 実行方法
+    - Emacs org-mode の ox-latex から呼ぶ
+      - [X] docker run lualatex
+        - 動きはするけど都度の環境ロードはさすがに重すぎ……
+      - [ ] 常駐させて docker exec lualatex
+      - 常駐させて latexmk / inotify とかの方が良い？
+    - Emacs inline tex 画像変換をやらせる
+    - Emacs からリアルタイムプレビューとかできる？
+    - 各種 wrapper から呼べる？
+      - pandoc / reST / review / etc.
+
+- texlive
+  - luatex 専用
+    - 歴史は掘らない
+    - できないことは諦めよう……
+  - beamer
+    - [X] 箇条書きスライドが出せればよい
+      - 画像はったりお絵描きしたりは、まぁやらないだろう……
+    - テーマ指定
+      - [ ] 標準で入っているテーマ
+      - コンテナ外からテーマディレクトリを volume マウントして切り替え、とかできる？
+    - コード片の syntax highlight
+      - minted + pygments でできるらしい？
+  - フォント
+    - 日本語
+      - 指定や設定なしで、デフォルトで haranoaji を pdf に埋めこみたい
+        - [X] haranoaji をインストールして認識させる
+        - [ ] デフォルトで haranoaji を使う
+        - [ ] pdf への埋め込み
+    - 英語
+    - 数式？
+    - 絵文字？
+    - その他
+      - コンテナ外からフォントディレクトリを volume マウントして使わせる、とかできる？
