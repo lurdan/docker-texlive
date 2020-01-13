@@ -1,49 +1,22 @@
-FROM frolvlad/alpine-glibc:latest
+FROM debian:sid-slim
 
-ENV PATH /usr/local/texlive/2019/bin/x86_64-linux:$PATH
-RUN apk upgrade --update && \
-  apk add --no-cache perl py-pygments fontconfig-dev freetype-dev && \
-  apk add --no-cache --virtual .build-dep wget xz tar unzip && \
-  mkdir /tmp/install-tl-unx && \
-  wget -qO - http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz | \
-  tar -xz -C /tmp/install-tl-unx --strip-components=1 && \
-  printf "%s\n" \
-  "selected_scheme scheme-basic" \
-  "binary_x86_64-darwin 0" \
-  "binary_x86_64-linux 1" \
-  "binary_win32 0" \
-  "collection-xetex 0" \
-  "collection-latexextra 1" \
-  "collection-fontsrecommended 1" \
-  "collection-langjapanese 1" \
-  "option_doc 0" \
-  "option_src 0" \
-  "tlpdbopt_install_docfiles 0" \
-  "tlpdbopt_install_srcfiles 0" \
-  "in_place 0" \
-  "option_adjustrepo 0" \
-  "option_autobackup 0" \
-  "option_desktop_integration 0" \
-  "option_file_assocs 0" \
-  "option_letter 0" \
-  "option_menu_integration 0" \
-  > /tmp/install-tl-unx/texlive.profile && \
-  /tmp/install-tl-unx/install-tl \
-  --profile=/tmp/install-tl-unx/texlive.profile
+RUN apt update && \
+  apt -y full-upgrade && \
+  apt install -y --no-install-recommends \
+    $(apt-cache depends texlive-full | awk '/Depends:/{print $2}' | egrep -v '(\-doc|arabic|chinese|cyrillic|czechslovak|european|french|german|greek|italian|korean|polish|portuguese|spanish|lang-other|games|music|^context|cjk-all|formats-extra|extra-links|science|xetex|humanities|fonts-extra|bibtex-extra|tex-gyre|cm-super)') \
+    wget unzip ca-certificates && \
+  apt clean && \
+  rm -rf /var/lib/apt/lists/*
 
-ENV FONTPATH /usr/local/texlive/texmf-local/fonts/opentype
-VOLUME /usr/local/texlive/2019/texmf-var/luatex-cache
+ENV FONTPATH /usr/local/share/texmf/fonts/opentype
+VOLUME /var/lib/texmf/luatex-cache
 RUN mkdir -p $FONTPATH/public && \
   wget -qO $FONTPATH/public/haranoaji.zip \
   https://github.com/trueroad/HaranoAjiFonts/archive/master.zip && \
   cd $FONTPATH/public && unzip -q -j -d haranoaji haranoaji.zip && \
   rm haranoaji.zip && \
-  mktexlsr && \
+  texhash && \
   luaotfload-tool -u -f
-
-RUN tlmgr install latexmk ulem && \
-  rm -fr /tmp/install-tl-unx && \
-  apk del .build-dep
 
 WORKDIR /workdir
 
